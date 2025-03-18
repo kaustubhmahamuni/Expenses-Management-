@@ -1,11 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Expense Management System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const worksheet = XLSX.utils.json_to_sheet(expenses);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Expenses");
+        XLSX.writeFile(workbook, "expenses.xlsx");
+    </script>
     <style>
         * {
             margin: 0;
@@ -156,6 +163,7 @@
                 <h3>Most Spent Category</h3>
                 <p id="top-category">-</p>
             </div>
+			
         </div>
 
         <form class="expense-form" id="expenseForm">
@@ -185,16 +193,21 @@
                 </div>
             </div>
             <button type="submit">Add Expense</button>
+			
         </form>
 
         <div class="expense-list">
-            <h2>Recent Expenses</h2>
+            <h2>Recent Expenses<button onclick="downloadExpenses()" class="download-btn">
+        <i class="fas fa-file-excel"></i> Download Expenses
+    </button></h2>
+			
             <div id="expensesContainer"></div>
         </div>
 
         <div class="chart-container">
             <canvas id="expenseChart"></canvas>
         </div>
+		
     </div>
 
     <script>
@@ -253,18 +266,18 @@
         function renderExpenses() {
             const container = document.getElementById('expensesContainer');
             container.innerHTML = expenses.map((expense, index) => `
-                    <div class="expense-item">
-                        <div class="expense-details">
-                            <div class="expense-amount">$${parseFloat(expense.amount).toFixed(2)}</div>
-                            <div>${expense.description}</div>
-                            <small>${new Date(expense.date).toLocaleDateString()}</small>
+                        <div class="expense-item">
+                            <div class="expense-details">
+                                <div class="expense-amount">$${parseFloat(expense.amount).toFixed(2)}</div>
+                                <div>${expense.description}</div>
+                                <small>${new Date(expense.date).toLocaleDateString()}</small>
+                            </div>
+                            <div class="expense-category">${expense.category}</div>
+                            <div class="delete-btn" onclick="deleteExpense(${index})">
+                                <i class="fas fa-trash"></i>
+                            </div>
                         </div>
-                        <div class="expense-category">${expense.category}</div>
-                        <div class="delete-btn" onclick="deleteExpense(${index})">
-                            <i class="fas fa-trash"></i>
-                        </div>
-                    </div>
-                `).join('');
+                    `).join('');
         }
 
         // Delete expense
@@ -303,6 +316,49 @@
 
         // Initial render
         updateAll();
+    </script>
+    <!-- Add this button in the HTML (place it near the header or summary section) -->
+    
+
+    <!-- Add this CSS -->
+    <style>
+        .download-btn {
+            background: #2196F3;
+            margin-left: 10px;
+        }
+
+            .download-btn:hover {
+                background: #1976D2;
+            }
+    </style>
+
+    <script>
+        // Add this function to your JavaScript
+        function downloadExpenses() {
+            // CSV Version (simple)
+            const csvContent = "data:text/csv;charset=utf-8,"
+                + "Amount,Description,Category,Date\n"
+                + expenses.map(e =>
+                    `${e.amount},${e.description},${e.category},${e.date}`
+                ).join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "expenses.csv");
+            document.body.appendChild(link);
+            link.click();
+
+        /* XLSX Version (proper Excel - requires library)
+        // 1. Add this script to your <head>:
+        // 
+
+    const worksheet = XLSX.utils.json_to_sheet(expenses);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Expenses");
+    XLSX.writeFile(workbook, "expenses.xlsx");
+    */
+    }
     </script>
 </body>
 </html>
